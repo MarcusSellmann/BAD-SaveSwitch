@@ -74,7 +74,6 @@ Filesystem operations use backups and rollback where changes could otherwise lea
 
 - `config.json`: Runtime paths and language selection. It is user-specific and should not be hard-coded for another machine.
 - `README.md`: Project setup, configuration, storage layout, workflows, and file map.
-- `.vscode/launch.json`: VS Code debug configuration for `main.py`.
 - `main.py`: Application entry point.
 - `requirements.txt`: Python package requirements.
 - `core/config_manager.py`: Loads and saves the JSON configuration.
