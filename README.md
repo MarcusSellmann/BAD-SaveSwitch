@@ -1,6 +1,6 @@
 # BAD Save Switch
 
-BAD Save Switch is a Tkinter application for storing and switching game save sets across the configured Season 1/2 and Season 3 save locations.
+BAD Save Switch is a Tkinter application for Being a DIK that makes it easy to store and switch between multiple game save sets across the configured Season 1/2 and Season 3 save locations. It lets you preserve different playthroughs, experiment with choices without overwriting progress, and quickly return to an earlier point in the story. Save sets are organized with names, descriptions, and thumbnails, helping you identify the right playthrough at a glance while keeping unrelated files in the live save directories protected.
 
 ## Requirements
 
@@ -22,16 +22,14 @@ Run the launcher from the repository root:
 python main.py
 ```
 
-The VS Code debugger can use `.vscode/launch.json` to launch the same file.
-
 ## Building for Windows
 
-Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe`. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
+Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe` with the BAD Save Switch icon. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
 
 To build manually, install `requirements.txt` and `requirements-build.txt`, then run:
 
 ```text
-python -m PyInstaller --noconfirm --clean --windowed --onefile --name BAD-SaveSwitch main.py
+python -m PyInstaller --noconfirm --clean --windowed --onefile --icon=assets\BAD_Save_Switch.ico --add-data "assets\BAD_Save_Switch.ico;assets" --name BAD-SaveSwitch main.py
 ```
 
 ## Configuration
