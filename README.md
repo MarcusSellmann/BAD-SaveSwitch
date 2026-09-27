@@ -24,9 +24,19 @@ python main.py
 
 The VS Code debugger can use `.vscode/launch.json` to launch the same file.
 
+## Building for Windows
+
+Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe`. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
+
+To build manually, install `requirements.txt` and `requirements-build.txt`, then run:
+
+```text
+python -m PyInstaller --noconfirm --clean --windowed --onefile --name BAD-SaveSwitch main.py
+```
+
 ## Configuration
 
-The application reads `config.json` from the current working directory. The settings window writes the same file. The main fields are:
+Source runs read `config.json` from the current working directory. Packaged executables read and write it beside the `.exe`. The settings window writes the same file. The main fields are:
 
 | Key | Purpose |
 | --- | --- |
@@ -72,10 +82,12 @@ Filesystem operations use backups and rollback where changes could otherwise lea
 
 ## Project files
 
-- `config.json`: Runtime paths and language selection. It is user-specific and should not be hard-coded for another machine.
+- `config.json`: Runtime paths and language selection. It is user-specific and should not be hard-coded for another machine. In a packaged executable, it is stored beside the `.exe`.
 - `README.md`: Project setup, configuration, storage layout, workflows, and file map.
 - `main.py`: Application entry point.
 - `requirements.txt`: Python package requirements.
+- `requirements-build.txt`: Windows executable build dependencies.
+- `build_windows.bat`: Builds the standalone Windows executable.
 - `core/config_manager.py`: Loads and saves the JSON configuration.
 - `core/localization.py`: Runtime language selection and gettext/built-in translations.
 - `core/save_manager.py`: Save-set discovery, creation, activation, update, deletion, source-save cleanup, backup, and rollback logic.
