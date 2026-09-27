@@ -24,12 +24,12 @@ python main.py
 
 ## Building for Windows
 
-Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe`. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
+Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe` with the BAD Save Switch icon. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
 
 To build manually, install `requirements.txt` and `requirements-build.txt`, then run:
 
 ```text
-python -m PyInstaller --noconfirm --clean --windowed --onefile --name BAD-SaveSwitch main.py
+python -m PyInstaller --noconfirm --clean --windowed --onefile --icon=assets\BAD_Save_Switch.ico --add-data "assets\BAD_Save_Switch.ico;assets" --name BAD-SaveSwitch main.py
 ```
 
 ## Configuration

@@ -2,6 +2,7 @@
 
 import tkinter as tk
 import os
+import sys
 from datetime import datetime
 
 from PIL import Image, ImageTk
@@ -35,6 +36,19 @@ class MainWindow(tk.Tk):
 
         self.title(
             _("BAD Save Switch")
+        )
+
+        application_directory = getattr(
+            sys,
+            "_MEIPASS",
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        self.iconbitmap(
+            os.path.join(
+                application_directory,
+                "assets",
+                "BAD_Save_Switch.ico"
+            )
         )
 
         self.geometry(
