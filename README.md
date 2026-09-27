@@ -1,6 +1,6 @@
 # BAD Save Switch
 
-BAD Save Switch is a Tkinter application for storing and switching game save sets across the configured Season 1/2 and Season 3 save locations.
+BAD Save Switch is a Tkinter application for Being a DIK that makes it easy to store and switch between multiple game save sets across the configured Season 1/2 and Season 3 save locations. It lets you preserve different playthroughs, experiment with choices without overwriting progress, and quickly return to an earlier point in the story. Save sets are organized with names, descriptions, and thumbnails, helping you identify the right playthrough at a glance while keeping unrelated files in the live save directories protected.
 
 ## Requirements
 
@@ -21,8 +21,6 @@ Run the launcher from the repository root:
 ```text
 python main.py
 ```
-
-The VS Code debugger can use `.vscode/launch.json` to launch the same file.
 
 ## Building for Windows
 
