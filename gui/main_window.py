@@ -286,6 +286,9 @@ class MainWindow(tk.Tk):
         if not os.path.isfile(thumbnail_path):
             return ""
 
+        if thumbnail_path in self.thumbnail_images:
+            return self.thumbnail_images[thumbnail_path]
+
         try:
             image = Image.open(thumbnail_path)
             image.thumbnail(self.THUMBNAIL_SIZE)
