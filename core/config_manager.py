@@ -31,7 +31,7 @@ class ConfigManager:
                 "Season3_appdata_directory": "",
                 "library_path": "",
                 "thumbnail_path": "",
-                "language": "de"
+                "language": "en"
             }
 
             ConfigManager.save(data)

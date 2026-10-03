@@ -7,7 +7,7 @@ from pathlib import Path
 
 LOCALE_DIRECTORY = Path(__file__).resolve().parent.parent / "locales"
 _translation = gettext.NullTranslations()
-_current_language = "de"
+_current_language = "en"
 BUILTIN_TRANSLATIONS = {
     "en": {
         "BAD Save Switch": "BAD Save Switch",
@@ -91,5 +91,5 @@ def translate(message: str) -> str:
     return str(_translation.gettext(message))
 
 
-set_language(os.environ.get("SAVEGAME_MANAGER_LANGUAGE", "de"))
+set_language(os.environ.get("SAVEGAME_MANAGER_LANGUAGE", "en"))
 _ = translate
