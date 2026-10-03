@@ -21,6 +21,7 @@ class MainWindow(tk.Tk):
     """Display the save-set library and expose its primary actions."""
 
     THUMBNAIL_SIZE = (96, 64)
+    TREE_IMAGE_INSET = 20
     TREE_ROW_HEIGHT = 72
     DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S"
     DATETIME_SAMPLE = "00.00.0000 00:00:00"
@@ -336,6 +337,27 @@ class MainWindow(tk.Tk):
         try:
             image = Image.open(thumbnail_path)
             image.thumbnail(self.THUMBNAIL_SIZE)
+            if image.height > image.width:
+                centered_image = Image.new(
+                    "RGBA",
+                    self.THUMBNAIL_SIZE,
+                    (0, 0, 0, 0)
+                )
+                image = image.convert("RGBA")
+                image_left = max(
+                    0,
+                    (self.THUMBNAIL_SIZE[0] - image.width) // 2
+                    - self.TREE_IMAGE_INSET
+                )
+                centered_image.paste(
+                    image,
+                    (
+                        image_left,
+                        (self.THUMBNAIL_SIZE[1] - image.height) // 2
+                    ),
+                    image
+                )
+                image = centered_image
             photo = ImageTk.PhotoImage(image)
         except (OSError, ValueError):
             return ""
