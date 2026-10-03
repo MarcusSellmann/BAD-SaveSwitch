@@ -178,6 +178,13 @@ class MainWindow(tk.Tk):
             pady=10
         )
 
+        self.action_buttons["new_empty"] = ttk.Button(
+            buttons,
+            text=_("Leerer Satz"),
+            command=self.new_empty_set
+        )
+        self.action_buttons["new_empty"].pack(side="left", padx=5)
+
         self.action_buttons["new"] = ttk.Button(
             buttons,
             text=_("Neu"),
@@ -333,6 +340,31 @@ class MainWindow(tk.Tk):
             win.result["name"],
             win.result["thumbnail"],
             win.result["keep"],
+            description=win.result["description"]
+        )
+
+        self.refresh()
+
+    def new_empty_set(self):
+        """Create a save set without copying files from source directories."""
+
+        if not self.ensure_library_configured():
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.create_empty_set(
+            win.result["name"],
+            win.result["thumbnail"],
             description=win.result["description"]
         )
 
@@ -536,6 +568,23 @@ class MainWindow(tk.Tk):
         self.show_message(
             _("Hinweis"),
             _("Bitte legen Sie die Speicherpfade in den Einstellungen fest.")
+        )
+        self.settings()
+        return False
+
+    def ensure_library_configured(self):
+        """Require only a usable library path for empty-set creation."""
+
+        library_path = self.config_data.get("library_path", "").strip()
+        if library_path and (
+                not os.path.exists(library_path)
+                or os.path.isdir(library_path)
+        ):
+            return True
+
+        self.show_message(
+            _("Hinweis"),
+            _("Bitte legen Sie den Bibliothekspfad in den Einstellungen fest.")
         )
         self.settings()
         return False

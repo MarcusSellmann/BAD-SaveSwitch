@@ -11,7 +11,7 @@ from core.localization import _
 class CreateSetWindow(tk.Toplevel):
     """Collect save-set metadata and creation options from the user."""
 
-    def __init__(self, parent, config):
+    def __init__(self, parent, config, show_keep_option=True):
         """Initialize the form using configured thumbnail defaults."""
 
         super().__init__(parent)
@@ -23,6 +23,7 @@ class CreateSetWindow(tk.Toplevel):
 
         self.result = None
         self.config_data = config
+        self.show_keep_option = show_keep_option
 
         self.name_var = tk.StringVar()
         self.description_var = tk.StringVar()
@@ -121,13 +122,14 @@ class CreateSetWindow(tk.Toplevel):
             padx=20
         )
 
-        ttk.Checkbutton(
-            self,
-            text=_("Aktive Saves behalten"),
-            variable=self.keep_var
-        ).pack(
-            pady=15
-        )
+        if self.show_keep_option:
+            ttk.Checkbutton(
+                self,
+                text=_("Aktive Saves behalten"),
+                variable=self.keep_var
+            ).pack(
+                pady=15
+            )
 
         ttk.Button(
             self,

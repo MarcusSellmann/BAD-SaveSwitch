@@ -68,6 +68,7 @@ library_path/
 ## Main workflows
 
 - **New** creates a snapshot from the configured source directories. The checkbox controls whether source `*.save` files are retained.
+- **Empty Set** creates the standard save-set folder structure and metadata without copying any files.
 - **Activate** restores a set's save files and marks exactly one set active.
 - **Update** replaces the selected or active set's snapshots with current source contents and updates `modified`.
 - **Delete** removes the selected set after confirmation.
