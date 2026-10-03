@@ -22,8 +22,6 @@ BAD-SaveSwitch/
 
 The first time you start the executable, it creates `config.json` beside itself. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
 
-
-
 Install the dependency with:
 
 ```text
@@ -82,6 +80,8 @@ library_path/
 `meta.json` stores the set ID, name, description, thumbnail filename, created timestamp, modified timestamp, and active state. Thumbnail images remain in `thumbnail_path`; the metadata stores only the selected filename. The UI falls back to `default.png` when the selected image is unavailable. Save snapshots preserve the configured source directory structure, while activation transfers only `*.save` files to protect unrelated files in the live directories.
 
 The default save-set image is available in `assets/default.png`. Copy it into the configured thumbnail folder to use it as the default. Official images from the game are not included due to copyright reasons.
+
+You can add your own images to the configured thumbnail folder and choose them for save sets. The thumbnail picker lists PNG, JPG/JPEG, and WebP files.
 
 ## Main workflows
 
