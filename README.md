@@ -108,4 +108,20 @@ The project currently has no automated test files. Temporary-directory smoke tes
 
 ## Donate
 
-If BAD Save Switch is useful to you, you can support its development through [PayPal](https://www.paypal.com/donate/?hosted_button_id=CT9NQZE8DTKKJ).
+If BAD Save Switch is useful to you, you can support its development.
+
+<div id="donate-button-container">
+  <div id="donate-button"></div>
+  <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
+  <script>
+    PayPal.Donation.Button({
+      env: 'production',
+      hosted_button_id: 'CT9NQZE8DTKKJ',
+      image: {
+        src: 'https://www.paypalobjects.com/en_US/DK/i/btn/btn_donateCC_LG.gif',
+        alt: 'Donate with PayPal button',
+        title: 'PayPal - The safer, easier way to pay online!',
+      }
+    }).render('#donate-button');
+  </script>
+</div>
