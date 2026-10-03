@@ -178,30 +178,23 @@ class MainWindow(tk.Tk):
             pady=10
         )
 
-        self.action_buttons["new_empty"] = ttk.Button(
-            buttons,
-            text=_("Leerer Satz"),
-            command=self.new_empty_set
-        )
-        self.action_buttons["new_empty"].pack(side="left", padx=5)
-
         self.action_buttons["new"] = ttk.Button(
             buttons,
-            text=_("Neu"),
+            text=_("Aus Spielstand erstellen"),
             command=self.new_set
         )
         self.action_buttons["new"].pack(side="left", padx=5)
 
         self.action_buttons["activate"] = ttk.Button(
             buttons,
-            text=_("Aktivieren"),
+            text=_("Satz aktivieren"),
             command=self.activate
         )
         self.action_buttons["activate"].pack(side="left", padx=5)
 
         self.action_buttons["update"] = ttk.Button(
             buttons,
-            text=_("Aktualisieren"),
+            text=_("Satz synchronisieren"),
             command=self.update_active_set
         )
         self.action_buttons["update"].pack(side="left", padx=5)
@@ -213,12 +206,29 @@ class MainWindow(tk.Tk):
         )
         self.action_buttons["delete"].pack(side="left", padx=5)
 
+        ttk.Separator(
+            buttons,
+            orient="vertical"
+        ).pack(
+            side="left",
+            fill="y",
+            padx=8,
+            pady=4
+        )
+
         self.action_buttons["clear_sources"] = ttk.Button(
             buttons,
             text=_("Saves löschen"),
             command=self.clear_source_save_files
         )
         self.action_buttons["clear_sources"].pack(side="left", padx=5)
+
+        self.action_buttons["new_empty"] = ttk.Button(
+            buttons,
+            text=_("Leerer Satz"),
+            command=self.new_empty_set
+        )
+        self.action_buttons["new_empty"].pack(side="left", padx=5)
 
         self.action_buttons["settings"] = ttk.Button(
             buttons,
@@ -394,11 +404,11 @@ class MainWindow(tk.Tk):
 
         menu = tk.Menu(self, tearoff=False)
         menu.add_command(
-            label=_("Aktivieren"),
+            label=_("Satz aktivieren"),
             command=self.activate
         )
         menu.add_command(
-            label=_("Aktualisieren"),
+            label=_("Satz synchronisieren"),
             command=lambda set_id=item: self.update_set(set_id)
         )
         menu.add_separator()
@@ -729,11 +739,12 @@ class MainWindow(tk.Tk):
         self.tree.heading("#0", text=_("Thumbnail"))
 
         button_labels = {
-            "new": _("Neu"),
-            "activate": _("Aktivieren"),
-            "update": _("Aktualisieren"),
+            "new": _("Aus Spielstand erstellen"),
+            "activate": _("Satz aktivieren"),
+            "update": _("Satz synchronisieren"),
             "delete": _("Löschen"),
             "clear_sources": _("Saves löschen"),
+            "new_empty": _("Leerer Satz"),
             "settings": _("Einstellungen")
         }
 
