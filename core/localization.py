@@ -24,6 +24,7 @@ BUILTIN_TRANSLATIONS = {
         "Leerer Satz": "Empty Set",
         "Satz aktivieren": "Activate set",
         "Satz synchronisieren": "Synchronize set",
+        "Satz bearbeiten": "Edit set",
         "Löschen": "Delete",
         "Saves löschen": "Delete source saves",
         "Einstellungen": "Settings",

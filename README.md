@@ -74,7 +74,7 @@ library_path/
 - **Delete** removes the selected set after confirmation.
 - **Delete source saves** removes all `*.save` files from the configured source directories after confirmation.
 - **Double-click** activates a set.
-- **Right-click** opens activate, update, and delete actions for a row.
+- **Right-click** opens activate, synchronize, edit, and delete actions for a row.
 - **Language dropdown** switches between German and English and persists the choice.
 
 Filesystem operations use backups and rollback where changes could otherwise leave live files or metadata partially modified.

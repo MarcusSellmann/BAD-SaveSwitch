@@ -331,6 +331,30 @@ class SaveManager:
             )
         )
 
+    def update_set_details(self, set_id, name, description, thumbnail):
+        """Update a set's display metadata without changing its save files."""
+
+        set_folder = os.path.join(
+            self.config["library_path"],
+            set_id
+        )
+        meta_file = os.path.join(set_folder, "meta.json")
+
+        if not os.path.isfile(meta_file):
+            return False
+
+        with open(meta_file, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        metadata["name"] = name
+        metadata["description"] = description
+        metadata["thumbnail"] = os.path.basename(thumbnail) if thumbnail else ""
+
+        with open(meta_file, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=4)
+
+        return True
+
     def clear_source_save_files(self):
         """Delete all *.save files across the configured source directories."""
 

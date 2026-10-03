@@ -411,6 +411,10 @@ class MainWindow(tk.Tk):
             label=_("Satz synchronisieren"),
             command=lambda set_id=item: self.update_set(set_id)
         )
+        menu.add_command(
+            label=_("Satz bearbeiten"),
+            command=lambda set_id=item: self.edit_set(set_id)
+        )
         menu.add_separator()
         menu.add_command(
             label=_("Löschen"),
@@ -419,6 +423,41 @@ class MainWindow(tk.Tk):
 
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def edit_set(self, set_id):
+        """Edit a save set's name, description, and thumbnail."""
+
+        save_set = next(
+            (
+                save_set
+                for save_set in self.manager.get_all_sets()
+                if save_set.id == set_id
+            ),
+            None
+        )
+
+        if not save_set:
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False,
+            save_set=save_set
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.update_set_details(
+            set_id,
+            win.result["name"],
+            win.result["description"],
+            win.result["thumbnail"]
+        )
+        self.refresh()
 
     def activate(self):
         """Activate the selected row and show the centered result message."""
