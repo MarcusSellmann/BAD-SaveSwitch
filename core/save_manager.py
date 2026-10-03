@@ -180,6 +180,43 @@ class SaveManager:
 
                 raise
 
+    def create_empty_set(self, name, thumbnail, description=""):
+        """Create a save set with empty save-location folders."""
+
+        library = self.config["library_path"]
+        os.makedirs(library, exist_ok=True)
+
+        set_id = str(uuid.uuid4())
+        folder = os.path.join(library, set_id)
+
+        try:
+            saves_folder = os.path.join(folder, "saves")
+            os.makedirs(saves_folder)
+
+            for location_name in self.SAVE_LOCATIONS:
+                os.makedirs(os.path.join(saves_folder, location_name))
+
+            save_set = SaveSet(
+                id=set_id,
+                name=name,
+                description=description,
+                thumbnail=os.path.basename(thumbnail) if thumbnail else "",
+                created=datetime.now().isoformat()
+            )
+
+            with open(
+                    os.path.join(folder, "meta.json"),
+                    "w",
+                    encoding="utf-8"
+            ) as f:
+                json.dump(save_set.to_dict(), f, indent=4)
+        except Exception:
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
+            raise
+
+        return set_id
+
     def activate_set(self, set_id):
         """Restore a set's save files and mark it as the active set."""
 
@@ -293,6 +330,30 @@ class SaveManager:
                 set_id
             )
         )
+
+    def update_set_details(self, set_id, name, description, thumbnail):
+        """Update a set's display metadata without changing its save files."""
+
+        set_folder = os.path.join(
+            self.config["library_path"],
+            set_id
+        )
+        meta_file = os.path.join(set_folder, "meta.json")
+
+        if not os.path.isfile(meta_file):
+            return False
+
+        with open(meta_file, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        metadata["name"] = name
+        metadata["description"] = description
+        metadata["thumbnail"] = os.path.basename(thumbnail) if thumbnail else ""
+
+        with open(meta_file, "w", encoding="utf-8") as f:
+            json.dump(metadata, f, indent=4)
+
+        return True
 
     def clear_source_save_files(self):
         """Delete all *.save files across the configured source directories."""

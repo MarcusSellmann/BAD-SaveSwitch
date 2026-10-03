@@ -11,21 +11,27 @@ from core.localization import _
 class CreateSetWindow(tk.Toplevel):
     """Collect save-set metadata and creation options from the user."""
 
-    def __init__(self, parent, config):
+    def __init__(self, parent, config, show_keep_option=True, save_set=None):
         """Initialize the form using configured thumbnail defaults."""
 
         super().__init__(parent)
 
-        self.title(_("Neuer Satz"))
+        self.title(_("Satz bearbeiten") if save_set else _("Neuer Satz"))
         self.geometry("500x300")
         self.transient(parent)
         self.main_window = parent
 
         self.result = None
         self.config_data = config
+        self.save_set = save_set
+        self.show_keep_option = show_keep_option and save_set is None
 
-        self.name_var = tk.StringVar()
-        self.description_var = tk.StringVar()
+        self.name_var = tk.StringVar(
+            value=save_set.name if save_set else ""
+        )
+        self.description_var = tk.StringVar(
+            value=save_set.description if save_set else ""
+        )
 
         self.keep_var = tk.BooleanVar(
             value=True
@@ -38,9 +44,11 @@ class CreateSetWindow(tk.Toplevel):
         )
 
         self.thumb_var = tk.StringVar(
-            value="default.png"
-            if os.path.isfile(default_thumbnail)
-            else ""
+            value=(
+                save_set.thumbnail
+                if save_set
+                else "default.png" if os.path.isfile(default_thumbnail) else ""
+            )
         )
 
         self.build()
@@ -121,17 +129,18 @@ class CreateSetWindow(tk.Toplevel):
             padx=20
         )
 
-        ttk.Checkbutton(
-            self,
-            text=_("Aktive Saves behalten"),
-            variable=self.keep_var
-        ).pack(
-            pady=15
-        )
+        if self.show_keep_option:
+            ttk.Checkbutton(
+                self,
+                text=_("Aktive Saves behalten"),
+                variable=self.keep_var
+            ).pack(
+                pady=15
+            )
 
         ttk.Button(
             self,
-            text=_("Erstellen"),
+            text=_("Speichern") if self.save_set else _("Erstellen"),
             command=self.create
         ).pack()
 
@@ -157,7 +166,10 @@ class CreateSetWindow(tk.Toplevel):
                 self.thumb_var.get()
             )
 
-            if not os.path.isfile(thumb):
+            if not os.path.isfile(thumb) and not (
+                    self.save_set
+                    and self.thumb_var.get() == self.save_set.thumbnail
+            ):
                 messagebox.showerror(
                     _("Fehler"),
                     _("Das ausgewählte Thumbnail wurde nicht gefunden."),
@@ -168,7 +180,7 @@ class CreateSetWindow(tk.Toplevel):
         self.result = {
             "name": self.name_var.get(),
             "description": self.description_var.get(),
-            "thumbnail": thumb,
+            "thumbnail": thumb or self.thumb_var.get(),
             "keep": self.keep_var.get()
         }
 

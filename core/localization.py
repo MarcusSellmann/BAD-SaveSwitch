@@ -7,7 +7,7 @@ from pathlib import Path
 
 LOCALE_DIRECTORY = Path(__file__).resolve().parent.parent / "locales"
 _translation = gettext.NullTranslations()
-_current_language = "de"
+_current_language = "en"
 BUILTIN_TRANSLATIONS = {
     "en": {
         "BAD Save Switch": "BAD Save Switch",
@@ -20,9 +20,11 @@ BUILTIN_TRANSLATIONS = {
         "Aktiv": "Active",
         "Ja": "Yes",
         "Nein": "No",
-        "Neu": "New",
-        "Aktivieren": "Activate",
-        "Aktualisieren": "Update",
+        "Aus Spielstand erstellen": "Create from savegame",
+        "Leerer Satz": "Empty Set",
+        "Satz aktivieren": "Activate set",
+        "Satz synchronisieren": "Synchronize set",
+        "Satz bearbeiten": "Edit set",
         "Löschen": "Delete",
         "Saves löschen": "Delete source saves",
         "Einstellungen": "Settings",
@@ -38,6 +40,7 @@ BUILTIN_TRANSLATIONS = {
         "Speicherstand konnte nicht aktualisiert werden.": "The save set could not be updated.",
         "Kein aktiver Speicherstand vorhanden.": "No active save set exists.",
         "Bitte legen Sie die Speicherpfade in den Einstellungen fest.": "Please configure the save paths in Settings.",
+        "Bitte legen Sie den Bibliothekspfad in den Einstellungen fest.": "Please configure the library path in Settings.",
         "Neuer Satz": "New Save Set",
         "Name:": "Name:",
         "Beschreibung:": "Description:",
@@ -89,5 +92,5 @@ def translate(message: str) -> str:
     return str(_translation.gettext(message))
 
 
-set_language(os.environ.get("SAVEGAME_MANAGER_LANGUAGE", "de"))
+set_language(os.environ.get("SAVEGAME_MANAGER_LANGUAGE", "en"))
 _ = translate

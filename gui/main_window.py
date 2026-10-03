@@ -21,6 +21,7 @@ class MainWindow(tk.Tk):
     """Display the save-set library and expose its primary actions."""
 
     THUMBNAIL_SIZE = (96, 64)
+    TREE_IMAGE_INSET = 20
     TREE_ROW_HEIGHT = 72
     DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S"
     DATETIME_SAMPLE = "00.00.0000 00:00:00"
@@ -68,6 +69,7 @@ class MainWindow(tk.Tk):
         )
 
         self.thumbnail_images = {}
+        self.active_set_ids = set()
 
         self.build()
 
@@ -161,6 +163,10 @@ class MainWindow(tk.Tk):
             "<Double-1>",
             self.double_click_activate
         )
+        self.tree.bind(
+            "<<TreeviewSelect>>",
+            self.update_sync_action_state
+        )
 
         self.tree.bind(
             "<Button-3>",
@@ -180,22 +186,23 @@ class MainWindow(tk.Tk):
 
         self.action_buttons["new"] = ttk.Button(
             buttons,
-            text=_("Neu"),
+            text=_("Aus Spielstand erstellen"),
             command=self.new_set
         )
         self.action_buttons["new"].pack(side="left", padx=5)
 
         self.action_buttons["activate"] = ttk.Button(
             buttons,
-            text=_("Aktivieren"),
+            text=_("Satz aktivieren"),
             command=self.activate
         )
         self.action_buttons["activate"].pack(side="left", padx=5)
 
         self.action_buttons["update"] = ttk.Button(
             buttons,
-            text=_("Aktualisieren"),
-            command=self.update_active_set
+            text=_("Satz synchronisieren"),
+            command=self.update_selected_set,
+            state="disabled"
         )
         self.action_buttons["update"].pack(side="left", padx=5)
 
@@ -206,12 +213,29 @@ class MainWindow(tk.Tk):
         )
         self.action_buttons["delete"].pack(side="left", padx=5)
 
+        ttk.Separator(
+            buttons,
+            orient="vertical"
+        ).pack(
+            side="left",
+            fill="y",
+            padx=8,
+            pady=4
+        )
+
         self.action_buttons["clear_sources"] = ttk.Button(
             buttons,
             text=_("Saves löschen"),
             command=self.clear_source_save_files
         )
         self.action_buttons["clear_sources"].pack(side="left", padx=5)
+
+        self.action_buttons["new_empty"] = ttk.Button(
+            buttons,
+            text=_("Leerer Satz"),
+            command=self.new_empty_set
+        )
+        self.action_buttons["new_empty"].pack(side="left", padx=5)
 
         self.action_buttons["settings"] = ttk.Button(
             buttons,
@@ -249,7 +273,14 @@ class MainWindow(tk.Tk):
 
         self.thumbnail_images.clear()
 
-        for save in self.manager.get_all_sets():
+        save_sets = self.manager.get_all_sets()
+        self.active_set_ids = {
+            save.id
+            for save in save_sets
+            if save.active
+        }
+
+        for save in save_sets:
 
             thumbnail = self.load_thumbnail(save.thumbnail)
 
@@ -267,6 +298,20 @@ class MainWindow(tk.Tk):
                     _("Ja") if save.active else _("Nein")
                 )
             )
+
+        self.update_sync_action_state()
+
+    def update_sync_action_state(self, event=None):
+        """Enable synchronization only when the selected set is active."""
+
+        selected = self.tree.selection()
+        is_active = bool(
+            selected
+            and selected[0] in self.active_set_ids
+        )
+        self.action_buttons["update"].state(
+            ["!disabled"] if is_active else ["disabled"]
+        )
 
     def load_thumbnail(self, thumbnail_name):
         """Load and scale a set thumbnail for use by the Treeview."""
@@ -286,9 +331,33 @@ class MainWindow(tk.Tk):
         if not os.path.isfile(thumbnail_path):
             return ""
 
+        if thumbnail_path in self.thumbnail_images:
+            return self.thumbnail_images[thumbnail_path]
+
         try:
             image = Image.open(thumbnail_path)
             image.thumbnail(self.THUMBNAIL_SIZE)
+            if image.height > image.width:
+                centered_image = Image.new(
+                    "RGBA",
+                    self.THUMBNAIL_SIZE,
+                    (0, 0, 0, 0)
+                )
+                image = image.convert("RGBA")
+                image_left = max(
+                    0,
+                    (self.THUMBNAIL_SIZE[0] - image.width) // 2
+                    - self.TREE_IMAGE_INSET
+                )
+                centered_image.paste(
+                    image,
+                    (
+                        image_left,
+                        (self.THUMBNAIL_SIZE[1] - image.height) // 2
+                    ),
+                    image
+                )
+                image = centered_image
             photo = ImageTk.PhotoImage(image)
         except (OSError, ValueError):
             return ""
@@ -335,6 +404,31 @@ class MainWindow(tk.Tk):
 
         self.refresh()
 
+    def new_empty_set(self):
+        """Create a save set without copying files from source directories."""
+
+        if not self.ensure_library_configured():
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.create_empty_set(
+            win.result["name"],
+            win.result["thumbnail"],
+            description=win.result["description"]
+        )
+
+        self.refresh()
+
     def double_click_activate(self, event):
         """Activate the row under a double-click."""
 
@@ -359,12 +453,17 @@ class MainWindow(tk.Tk):
 
         menu = tk.Menu(self, tearoff=False)
         menu.add_command(
-            label=_("Aktivieren"),
+            label=_("Satz aktivieren"),
             command=self.activate
         )
         menu.add_command(
-            label=_("Aktualisieren"),
-            command=lambda set_id=item: self.update_set(set_id)
+            label=_("Satz synchronisieren"),
+            command=lambda set_id=item: self.update_set(set_id),
+            state=tk.NORMAL if item in self.active_set_ids else tk.DISABLED
+        )
+        menu.add_command(
+            label=_("Satz bearbeiten"),
+            command=lambda set_id=item: self.edit_set(set_id)
         )
         menu.add_separator()
         menu.add_command(
@@ -374,6 +473,41 @@ class MainWindow(tk.Tk):
 
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def edit_set(self, set_id):
+        """Edit a save set's name, description, and thumbnail."""
+
+        save_set = next(
+            (
+                save_set
+                for save_set in self.manager.get_all_sets()
+                if save_set.id == set_id
+            ),
+            None
+        )
+
+        if not save_set:
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False,
+            save_set=save_set
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.update_set_details(
+            set_id,
+            win.result["name"],
+            win.result["description"],
+            win.result["thumbnail"]
+        )
+        self.refresh()
 
     def activate(self):
         """Activate the selected row and show the centered result message."""
@@ -397,27 +531,23 @@ class MainWindow(tk.Tk):
             _("Speicherstand aktiviert.")
         )
 
-    def update_active_set(self):
-        """Update the active set from current source-directory contents."""
+    def update_selected_set(self):
+        """Synchronize the selected set only when it is active."""
 
-        if not self.ensure_paths_configured():
+        selected = self.tree.selection()
+        if not selected or selected[0] not in self.active_set_ids:
             return
 
-        if not self.manager.update_active_set():
-            self.show_message(
-                _("Hinweis"),
-                _("Kein aktiver Speicherstand vorhanden.")
-            )
-            return
-
-        self.refresh()
-        self.show_message(
-            _("Fertig"),
-            _("Speicherstand aktualisiert.")
-        )
+        self.update_set(selected[0])
 
     def update_set(self, set_id):
-        """Update the set selected from the context menu."""
+        """Synchronize a selected active set from current source saves."""
+
+        if (
+                set_id not in self.active_set_ids
+                or set_id not in self.tree.selection()
+        ):
+            return
 
         if not self.ensure_paths_configured():
             return
@@ -533,6 +663,23 @@ class MainWindow(tk.Tk):
         self.show_message(
             _("Hinweis"),
             _("Bitte legen Sie die Speicherpfade in den Einstellungen fest.")
+        )
+        self.settings()
+        return False
+
+    def ensure_library_configured(self):
+        """Require only a usable library path for empty-set creation."""
+
+        library_path = self.config_data.get("library_path", "").strip()
+        if library_path and (
+                not os.path.exists(library_path)
+                or os.path.isdir(library_path)
+        ):
+            return True
+
+        self.show_message(
+            _("Hinweis"),
+            _("Bitte legen Sie den Bibliothekspfad in den Einstellungen fest.")
         )
         self.settings()
         return False
@@ -677,11 +824,12 @@ class MainWindow(tk.Tk):
         self.tree.heading("#0", text=_("Thumbnail"))
 
         button_labels = {
-            "new": _("Neu"),
-            "activate": _("Aktivieren"),
-            "update": _("Aktualisieren"),
+            "new": _("Aus Spielstand erstellen"),
+            "activate": _("Satz aktivieren"),
+            "update": _("Satz synchronisieren"),
             "delete": _("Löschen"),
             "clear_sources": _("Saves löschen"),
+            "new_empty": _("Leerer Satz"),
             "settings": _("Einstellungen")
         }
 
