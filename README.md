@@ -8,6 +8,20 @@ BAD Save Switch is a Tkinter application for Being a DIK that makes it easy to s
 - Pillow
 - A Windows environment is recommended because the default workflow targets Windows local and AppData directories.
 
+## Suggested Folder Structure
+
+For a packaged Windows installation, you can organize the files like this:
+
+```text
+BAD-SaveSwitch/
+|-- BAD-SaveSwitch.exe
+|-- config.json
+|-- BAD-library/
+`-- thumbnails/
+```
+
+The first time you start the executable, it creates `config.json` beside itself. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
+
 Install the dependency with:
 
 ```text
