@@ -67,14 +67,14 @@ library_path/
 
 ## Main workflows
 
-- **New** creates a snapshot from the configured source directories. The checkbox controls whether source `*.save` files are retained.
+- **Create from savegame** creates a snapshot from the configured source directories. The checkbox controls whether source `*.save` files are retained.
 - **Empty Set** creates the standard save-set folder structure and metadata without copying any files.
-- **Activate** restores a set's save files and marks exactly one set active.
-- **Update** replaces the selected or active set's snapshots with current source contents and updates `modified`.
+- **Activate set** restores a set's save files and marks exactly one set active.
+- **Synchronize set** replaces the selected set's snapshots with current source contents and updates `modified`. It is available only when the selected set is active.
 - **Delete** removes the selected set after confirmation.
 - **Delete source saves** removes all `*.save` files from the configured source directories after confirmation.
 - **Double-click** activates a set.
-- **Right-click** opens activate, synchronize, edit, and delete actions for a row.
+- **Right-click** opens activate, synchronize, edit, and delete actions for a row. Synchronize is disabled for inactive sets.
 - **Language dropdown** switches between German and English and persists the choice.
 
 Filesystem operations use backups and rollback where changes could otherwise leave live files or metadata partially modified.
@@ -105,3 +105,7 @@ python -m compileall -q .
 ```
 
 The project currently has no automated test files. Temporary-directory smoke tests should cover create, activate, update, delete, rollback, malformed metadata, and invalid configuration paths when changing filesystem behavior.
+
+## Donate
+
+If BAD Save Switch is useful to you, you can support its development through [PayPal](https://www.paypal.com/donate/?hosted_button_id=CT9NQZE8DTKKJ).

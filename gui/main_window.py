@@ -68,6 +68,7 @@ class MainWindow(tk.Tk):
         )
 
         self.thumbnail_images = {}
+        self.active_set_ids = set()
 
         self.build()
 
@@ -161,6 +162,10 @@ class MainWindow(tk.Tk):
             "<Double-1>",
             self.double_click_activate
         )
+        self.tree.bind(
+            "<<TreeviewSelect>>",
+            self.update_sync_action_state
+        )
 
         self.tree.bind(
             "<Button-3>",
@@ -195,7 +200,8 @@ class MainWindow(tk.Tk):
         self.action_buttons["update"] = ttk.Button(
             buttons,
             text=_("Satz synchronisieren"),
-            command=self.update_active_set
+            command=self.update_selected_set,
+            state="disabled"
         )
         self.action_buttons["update"].pack(side="left", padx=5)
 
@@ -266,7 +272,14 @@ class MainWindow(tk.Tk):
 
         self.thumbnail_images.clear()
 
-        for save in self.manager.get_all_sets():
+        save_sets = self.manager.get_all_sets()
+        self.active_set_ids = {
+            save.id
+            for save in save_sets
+            if save.active
+        }
+
+        for save in save_sets:
 
             thumbnail = self.load_thumbnail(save.thumbnail)
 
@@ -284,6 +297,20 @@ class MainWindow(tk.Tk):
                     _("Ja") if save.active else _("Nein")
                 )
             )
+
+        self.update_sync_action_state()
+
+    def update_sync_action_state(self, event=None):
+        """Enable synchronization only when the selected set is active."""
+
+        selected = self.tree.selection()
+        is_active = bool(
+            selected
+            and selected[0] in self.active_set_ids
+        )
+        self.action_buttons["update"].state(
+            ["!disabled"] if is_active else ["disabled"]
+        )
 
     def load_thumbnail(self, thumbnail_name):
         """Load and scale a set thumbnail for use by the Treeview."""
@@ -409,7 +436,8 @@ class MainWindow(tk.Tk):
         )
         menu.add_command(
             label=_("Satz synchronisieren"),
-            command=lambda set_id=item: self.update_set(set_id)
+            command=lambda set_id=item: self.update_set(set_id),
+            state=tk.NORMAL if item in self.active_set_ids else tk.DISABLED
         )
         menu.add_command(
             label=_("Satz bearbeiten"),
@@ -481,27 +509,23 @@ class MainWindow(tk.Tk):
             _("Speicherstand aktiviert.")
         )
 
-    def update_active_set(self):
-        """Update the active set from current source-directory contents."""
+    def update_selected_set(self):
+        """Synchronize the selected set only when it is active."""
 
-        if not self.ensure_paths_configured():
+        selected = self.tree.selection()
+        if not selected or selected[0] not in self.active_set_ids:
             return
 
-        if not self.manager.update_active_set():
-            self.show_message(
-                _("Hinweis"),
-                _("Kein aktiver Speicherstand vorhanden.")
-            )
-            return
-
-        self.refresh()
-        self.show_message(
-            _("Fertig"),
-            _("Speicherstand aktualisiert.")
-        )
+        self.update_set(selected[0])
 
     def update_set(self, set_id):
-        """Update the set selected from the context menu."""
+        """Synchronize a selected active set from current source saves."""
+
+        if (
+                set_id not in self.active_set_ids
+                or set_id not in self.tree.selection()
+        ):
+            return
 
         if not self.ensure_paths_configured():
             return
