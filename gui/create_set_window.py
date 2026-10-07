@@ -11,12 +11,24 @@ from core.localization import _
 class CreateSetWindow(tk.Toplevel):
     """Collect save-set metadata and creation options from the user."""
 
-    def __init__(self, parent, config, show_keep_option=True, save_set=None):
+    def __init__(
+            self,
+            parent,
+            config,
+            show_keep_option=True,
+            save_set=None,
+            copy_mode=False
+        ):
         """Initialize the form using configured thumbnail defaults."""
 
         super().__init__(parent)
 
-        self.title(_("Satz bearbeiten") if save_set else _("Neuer Satz"))
+        self.copy_mode = copy_mode
+        self.title(
+            _("Satz kopieren") if copy_mode
+            else _("Satz bearbeiten") if save_set
+            else _("Neuer Satz")
+        )
         self.geometry("500x300")
         self.transient(parent)
         self.main_window = parent
@@ -27,7 +39,11 @@ class CreateSetWindow(tk.Toplevel):
         self.show_keep_option = show_keep_option and save_set is None
 
         self.name_var = tk.StringVar(
-            value=save_set.name if save_set else ""
+            value=(
+                f"{save_set.name} - Kopie"
+                if save_set and copy_mode
+                else save_set.name if save_set else ""
+            )
         )
         self.description_var = tk.StringVar(
             value=save_set.description if save_set else ""
@@ -52,6 +68,8 @@ class CreateSetWindow(tk.Toplevel):
         )
 
         self.build()
+        self.update_idletasks()
+        self.geometry(f"500x{self.winfo_reqheight()}")
         self.center_on_parent(parent)
 
     def center_on_parent(self, parent):
@@ -140,9 +158,13 @@ class CreateSetWindow(tk.Toplevel):
 
         ttk.Button(
             self,
-            text=_("Speichern") if self.save_set else _("Erstellen"),
+            text=(
+                _("Kopie erstellen") if self.copy_mode
+                else _("Speichern") if self.save_set
+                else _("Erstellen")
+            ),
             command=self.create
-        ).pack()
+        ).pack(pady=(12, 8))
 
     def create(self):
         """Validate the form and expose its values to the main window."""

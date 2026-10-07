@@ -237,6 +237,14 @@ class MainWindow(tk.Tk):
         )
         self.action_buttons["new_empty"].pack(side="left", padx=5)
 
+        self.action_buttons["copy"] = ttk.Button(
+            buttons,
+            text=_("Satz kopieren"),
+            command=self.copy_selected_set,
+            state="disabled"
+        )
+        self.action_buttons["copy"].pack(side="left", padx=5)
+
         self.action_buttons["settings"] = ttk.Button(
             buttons,
             text=_("Einstellungen"),
@@ -302,7 +310,7 @@ class MainWindow(tk.Tk):
         self.update_sync_action_state()
 
     def update_sync_action_state(self, event=None):
-        """Enable synchronization only when the selected set is active."""
+        """Update action availability based on the selected save set."""
 
         selected = self.tree.selection()
         is_active = bool(
@@ -311,6 +319,9 @@ class MainWindow(tk.Tk):
         )
         self.action_buttons["update"].state(
             ["!disabled"] if is_active else ["disabled"]
+        )
+        self.action_buttons["copy"].state(
+            ["!disabled"] if selected else ["disabled"]
         )
 
     def load_thumbnail(self, thumbnail_name):
@@ -429,6 +440,50 @@ class MainWindow(tk.Tk):
 
         self.refresh()
 
+    def copy_selected_set(self, set_id=None):
+        """Duplicate the selected set and its saved files after confirmation."""
+
+        if not self.ensure_library_configured():
+            return
+
+        selected = self.tree.selection()
+        set_id = set_id or (selected[0] if selected else None)
+        if not set_id:
+            return
+
+        save_set = next(
+            (
+                save_set
+                for save_set in self.manager.get_all_sets()
+                if save_set.id == set_id
+            ),
+            None
+        )
+
+        if not save_set:
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False,
+            save_set=save_set,
+            copy_mode=True
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.copy_set(
+            save_set.id,
+            win.result["name"],
+            win.result["description"],
+            win.result["thumbnail"]
+        )
+        self.refresh()
+
     def double_click_activate(self, event):
         """Activate the row under a double-click."""
 
@@ -464,6 +519,10 @@ class MainWindow(tk.Tk):
         menu.add_command(
             label=_("Satz bearbeiten"),
             command=lambda set_id=item: self.edit_set(set_id)
+        )
+        menu.add_command(
+            label=_("Satz kopieren"),
+            command=lambda set_id=item: self.copy_selected_set(set_id)
         )
         menu.add_separator()
         menu.add_command(
@@ -830,6 +889,7 @@ class MainWindow(tk.Tk):
             "delete": _("Löschen"),
             "clear_sources": _("Saves löschen"),
             "new_empty": _("Leerer Satz"),
+            "copy": _("Satz kopieren"),
             "settings": _("Einstellungen")
         }
 

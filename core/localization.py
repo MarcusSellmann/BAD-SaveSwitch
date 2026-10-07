@@ -22,6 +22,8 @@ BUILTIN_TRANSLATIONS = {
         "Nein": "No",
         "Aus Spielstand erstellen": "Create from savegame",
         "Leerer Satz": "Empty Set",
+        "Satz kopieren": "Copy set",
+        "Kopie erstellen": "Create copy",
         "Satz aktivieren": "Activate set",
         "Satz synchronisieren": "Synchronize set",
         "Satz bearbeiten": "Edit set",
