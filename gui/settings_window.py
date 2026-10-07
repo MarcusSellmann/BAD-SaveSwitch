@@ -1,8 +1,10 @@
 """Dialog for configuring save, library, and thumbnail directories."""
 
+import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 
 from core.config_manager import ConfigManager
 from core.localization import _
@@ -76,6 +78,30 @@ class SettingsWindow(tk.Toplevel):
         if path:
             var.set(path)
 
+    def open_directory(self, var):
+        """Open the configured directory in the system file explorer."""
+
+        path = var.get().strip()
+        if not os.path.isdir(path):
+            return
+
+        try:
+            os.startfile(path)
+        except OSError as error:
+            messagebox.showerror(
+                _("Fehler"),
+                str(error),
+                parent=self
+            )
+
+    @staticmethod
+    def update_open_button_state(var, button):
+        """Enable the open button only for an existing directory."""
+
+        button.state(
+            ["!disabled"] if os.path.isdir(var.get().strip()) else ["disabled"]
+        )
+
     def build(self):
         """Build entries and browse/save controls for all configurable paths."""
 
@@ -98,15 +124,31 @@ class SettingsWindow(tk.Toplevel):
             ttk.Entry(
                 self,
                 textvariable=var,
-                width=60
+                width=50
             ).grid(row=row, column=1)
 
             ttk.Button(
                 self,
                 text=_("..."),
+                width=3,
                 command=lambda v=var:
                 self.browse(v)
             ).grid(row=row, column=2)
+
+            open_button = ttk.Button(
+                self,
+                text=_("Öffnen"),
+                width=8,
+                command=lambda v=var: self.open_directory(v),
+                state="disabled"
+            )
+            open_button.grid(row=row, column=3, padx=(4, 0))
+            var.trace_add(
+                "write",
+                lambda *_args, path_var=var, button=open_button:
+                self.update_open_button_state(path_var, button)
+            )
+            self.update_open_button_state(var, open_button)
 
         ttk.Button(
             self,

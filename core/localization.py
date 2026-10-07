@@ -58,6 +58,7 @@ BUILTIN_TRANSLATIONS = {
         "Season3 AppData-Verzeichnis": "Season3 AppData directory",
         "Bibliothek": "Library",
         "Thumbnails": "Thumbnails",
+        "Öffnen": "Open",
         "Speichern": "Save"
     }
 }
