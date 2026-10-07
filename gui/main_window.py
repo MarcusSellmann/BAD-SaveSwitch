@@ -16,6 +16,8 @@ from core.localization import _, get_current_language, set_language
 from gui.settings_window import SettingsWindow
 from gui.create_set_window import CreateSetWindow
 
+APP_VERSION = "1.0"
+
 
 class MainWindow(tk.Tk):
     """Display the save-set library and expose its primary actions."""
@@ -268,6 +270,10 @@ class MainWindow(tk.Tk):
         )
 
         language_dropdown.pack(side="right", padx=5)
+        ttk.Label(
+            buttons,
+            text=f"Version {APP_VERSION}"
+        ).pack(side="right", padx=5)
         language_dropdown.bind(
             "<<ComboboxSelected>>",
             self.change_language
