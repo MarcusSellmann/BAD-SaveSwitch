@@ -4,6 +4,7 @@ import tkinter as tk
 import os
 import sys
 from datetime import datetime
+from typing import cast
 
 from PIL import Image, ImageTk
 from tkinter import ttk
@@ -44,13 +45,18 @@ class MainWindow(tk.Tk):
             "_MEIPASS",
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
-        self.iconbitmap(
-            os.path.join(
-                application_directory,
-                "assets",
-                "BAD_Save_Switch.ico"
-            )
+        icon_path = os.path.join(
+            application_directory,
+            "assets",
+            "BAD_Save_Switch.ico"
         )
+        with Image.open(icon_path) as icon:
+            icon.thumbnail((256, 256))
+            self.application_icon = cast(
+                tk.PhotoImage,
+                ImageTk.PhotoImage(icon)
+            )
+        self.iconphoto(True, self.application_icon)
 
         self.geometry(
             "1600x700"

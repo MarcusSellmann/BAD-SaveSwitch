@@ -6,21 +6,22 @@ BAD Save Switch is a Tkinter application for Being a DIK that makes it easy to s
 
 - Python 3.9 or newer
 - Pillow
-- A Windows environment is recommended because the default workflow targets Windows local and AppData directories.
+- Tkinter (`python3-tk` on many Linux distributions)
+- Windows or Linux; save paths must be configured for the game installation on that system.
 
 ## Suggested Folder Structure
 
-For a packaged Windows installation, you can organize the files like this:
+For a packaged installation, keep the application and its configuration in a writable directory:
 
 ```text
 BAD-SaveSwitch/
-|-- BAD-SaveSwitch.exe
+|-- BAD-SaveSwitch.exe  (Windows) / BAD-SaveSwitch (Linux)
 |-- config.json
 |-- BAD-library/
 `-- thumbnails/
 ```
 
-The first time you start the executable, it creates `config.json` beside itself. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
+The first time you start a packaged executable, it creates `config.json` beside itself. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
 
 Install the dependency with:
 
@@ -36,6 +37,8 @@ Run the launcher from the repository root:
 python main.py
 ```
 
+On Linux, install the distribution's Tkinter package first if it is not already available (for example, `sudo apt install python3-tk`). Configure the actual Linux or Wine/Proton save directories in Settings; the application does not discover game paths automatically.
+
 ## Building for Windows
 
 Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe` with the BAD Save Switch icon. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
@@ -46,9 +49,19 @@ To build manually, install `requirements.txt` and `requirements-build.txt`, then
 python -m PyInstaller --noconfirm --clean --windowed --onefile --icon=assets\BAD_Save_Switch.ico --add-data "assets\BAD_Save_Switch.ico;assets" --name BAD-SaveSwitch main.py
 ```
 
+## Building for Linux
+
+Build on a Linux machine for a Linux executable; PyInstaller does not cross-compile from Windows. Install Python's virtual-environment and Tkinter packages using your distribution's package manager (for example, `sudo apt install python3-venv python3-tk`), then run:
+
+```text
+bash build_linux.sh
+```
+
+The script creates `dist/BAD-SaveSwitch`. Build on the oldest Linux distribution you intend to support, since the executable depends on the build system's glibc version. The generated binary can be run directly; keep it in a writable directory because its `config.json` is stored beside it.
+
 ## Configuration
 
-Source runs read `config.json` from the current working directory. Packaged executables read and write it beside the `.exe`. The settings window writes the same file. The main fields are:
+Source runs read `config.json` from the current working directory. Packaged executables read and write it beside the executable. The settings window writes the same file. The main fields are:
 
 | Key | Purpose |
 | --- | --- |
@@ -103,8 +116,9 @@ Filesystem operations use backups and rollback where changes could otherwise lea
 - `README.md`: Project setup, configuration, storage layout, workflows, and file map.
 - `main.py`: Application entry point.
 - `requirements.txt`: Python package requirements.
-- `requirements-build.txt`: Windows executable build dependencies.
+- `requirements-build.txt`: PyInstaller and build dependencies.
 - `build_windows.bat`: Builds the standalone Windows executable.
+- `build_linux.sh`: Builds the standalone Linux executable.
 - `core/config_manager.py`: Loads and saves the JSON configuration.
 - `core/localization.py`: Runtime language selection and gettext/built-in translations.
 - `core/save_manager.py`: Save-set discovery, creation, activation, update, deletion, source-save cleanup, backup, and rollback logic.
