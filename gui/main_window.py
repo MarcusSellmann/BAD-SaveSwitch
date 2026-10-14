@@ -16,7 +16,7 @@ from core.localization import _, get_current_language, set_language
 from gui.settings_window import SettingsWindow
 from gui.create_set_window import CreateSetWindow
 
-APP_VERSION = "1.0"
+APP_VERSION = "1.1_preview"
 
 
 class MainWindow(tk.Tk):
