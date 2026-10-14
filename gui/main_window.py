@@ -532,12 +532,39 @@ class MainWindow(tk.Tk):
         )
         menu.add_separator()
         menu.add_command(
+            label=_("Ordner öffnen"),
+            command=lambda set_id=item: self.open_set_folder(set_id)
+        )
+        menu.add_separator()
+        menu.add_command(
             label=_("Löschen"),
             command=self.delete
         )
 
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def open_set_folder(self, set_id):
+        """Open the selected save set's folder in the system file manager."""
+
+        folder = os.path.join(
+            self.config_data.get("library_path", ""),
+            set_id
+        )
+        if not os.path.isdir(folder):
+            self.show_message(
+                _("Fehler"),
+                _("Der Ordner des Satzes wurde nicht gefunden.")
+            )
+            return
+
+        try:
+            os.startfile(folder)
+        except OSError as error:
+            self.show_message(
+                _("Fehler"),
+                f"{_('Der Ordner konnte nicht geöffnet werden.')}\n{error}"
+            )
 
     def edit_set(self, set_id):
         """Edit a save set's name, description, and thumbnail."""
