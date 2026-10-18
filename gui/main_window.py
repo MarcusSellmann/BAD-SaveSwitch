@@ -28,7 +28,7 @@ from gui.theme import (
     show_themed_message
 )
 
-APP_VERSION = "1.1"
+APP_VERSION = "1.2_preview"
 
 
 class MainWindow(tk.Tk):
