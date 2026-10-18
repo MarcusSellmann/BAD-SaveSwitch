@@ -11,6 +11,7 @@ _current_language = "en"
 BUILTIN_TRANSLATIONS = {
     "en": {
         "BAD Save Switch": "BAD Save Switch",
+        "Lädt...": "Loading...",
         "Thumbnail": "Thumbnail",
         "ID": "ID",
         "Name": "Name",

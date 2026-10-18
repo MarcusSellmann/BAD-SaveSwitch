@@ -1,8 +1,10 @@
 """Main application window and save-set interaction workflows."""
 
-import tkinter as tk
+import math
 import os
 import sys
+import time
+import tkinter as tk
 from datetime import datetime
 
 from PIL import Image, ImageTk
@@ -27,15 +29,24 @@ class MainWindow(tk.Tk):
     TREE_ROW_HEIGHT = 72
     DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S"
     DATETIME_SAMPLE = "00.00.0000 00:00:00"
+    MAIN_WINDOW_SIZE = "1600x700"
+    SPLASH_SIZE = (520, 320)
     LANGUAGES = {
         "de": "🇩🇪 Deutsch",
         "en": "🇬🇧 English"
     }
 
-    def __init__(self):
-        """Initialize the main window, services, widgets, and initial rows."""
+    def __init__(self, splash_duration: float = 3.0):
+        """Initialize the app; keep the splash visible for at least duration seconds."""
+
+        if not math.isfinite(splash_duration) or splash_duration < 0:
+            raise ValueError(
+                "splash_duration must be a finite non-negative number"
+            )
 
         super().__init__()
+        self.withdraw()
+        self.splash_duration = splash_duration
 
         self.title(
             _("BAD Save Switch")
@@ -46,17 +57,14 @@ class MainWindow(tk.Tk):
             "_MEIPASS",
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
-        self.iconbitmap(
-            os.path.join(
-                application_directory,
-                "assets",
-                "BAD_Save_Switch.ico"
-            )
+        self.icon_path = os.path.join(
+            application_directory,
+            "assets",
+            "BAD_Save_Switch.ico"
         )
+        self.iconbitmap(self.icon_path)
 
-        self.geometry(
-            "1600x700"
-        )
+        self.geometry(self.MAIN_WINDOW_SIZE)
 
         self.config_data = ConfigManager.load()
         set_language(
@@ -65,6 +73,9 @@ class MainWindow(tk.Tk):
                 get_current_language()
             )
         )
+
+        splash = self.show_startup_splash()
+        splash_started_at = time.monotonic()
 
         self.manager = SaveManager(
             self.config_data
@@ -76,6 +87,86 @@ class MainWindow(tk.Tk):
         self.build()
 
         self.refresh()
+
+        remaining_duration = self.splash_duration - (
+            time.monotonic() - splash_started_at
+        )
+        if remaining_duration > 0:
+            splash.after(
+                round(remaining_duration * 1000),
+                splash.destroy
+            )
+            self.wait_window(splash)
+        else:
+            splash.destroy()
+
+        self.deiconify()
+
+    def show_startup_splash(self):
+        """Display the branded startup screen while the main window loads."""
+
+        background = "#242830"
+        foreground = "#F4F6F8"
+        muted_foreground = "#A4ACB8"
+
+        splash = tk.Toplevel(self)
+        splash.withdraw()
+        splash.overrideredirect(True)
+        splash.configure(background=background)
+        splash.resizable(False, False)
+        splash.iconbitmap(self.icon_path)
+
+        tk.Frame(
+            splash,
+            background="#31B7C7",
+            height=4
+        ).pack(fill="x")
+
+        icon = Image.open(self.icon_path).convert("RGBA")
+        icon = icon.resize((88, 88), Image.Resampling.LANCZOS)
+        self.splash_image = ImageTk.PhotoImage(icon, master=splash)
+
+        tk.Label(
+            splash,
+            image=self.splash_image,
+            background=background
+        ).pack(pady=(43, 15))
+
+        tk.Label(
+            splash,
+            text=_("BAD Save Switch"),
+            background=background,
+            foreground=foreground,
+            font=("Segoe UI", 22, "bold")
+        ).pack()
+
+        tk.Label(
+            splash,
+            text=f"Version {APP_VERSION}",
+            background=background,
+            foreground=muted_foreground,
+            font=("Segoe UI", 10)
+        ).pack(pady=(7, 0))
+
+        tk.Label(
+            splash,
+            text=_("Lädt..."),
+            background=background,
+            foreground=muted_foreground,
+            font=("Segoe UI", 9)
+        ).pack(pady=(18, 0))
+
+        splash.update_idletasks()
+        splash_width, splash_height = self.SPLASH_SIZE
+        x = (splash.winfo_screenwidth() - splash_width) // 2
+        y = (splash.winfo_screenheight() - splash_height) // 2
+        splash.geometry(
+            f"{splash_width}x{splash_height}+{x}+{y}"
+        )
+        splash.deiconify()
+        splash.update()
+
+        return splash
 
     def build(self):
         """Construct the list, controls, language selector, and bindings."""

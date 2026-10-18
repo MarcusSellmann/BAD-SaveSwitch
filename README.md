@@ -36,6 +36,8 @@ Run the launcher from the repository root:
 python main.py
 ```
 
+At startup, a centered splash screen displays the application icon and version while the save-set library loads. `MainWindow` accepts a `splash_duration` argument in seconds (default `1.0`); the splash remains visible for at least that long, and stays up longer if initialization takes longer.
+
 ## Building for Windows
 
 Run `build_windows.bat` from the repository or by double-clicking it. The script installs the app and build dependencies, then creates a standalone GUI executable at `dist\BAD-SaveSwitch.exe` with the BAD Save Switch icon. The first launch creates `config.json` beside the executable; configure the save, library, and thumbnail paths in Settings.
