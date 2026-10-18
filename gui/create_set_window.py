@@ -3,9 +3,10 @@
 import os
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
 
 from core.localization import _
+
+from gui.theme import BACKGROUND, show_themed_message
 
 
 class CreateSetWindow(tk.Toplevel):
@@ -23,6 +24,7 @@ class CreateSetWindow(tk.Toplevel):
 
         super().__init__(parent)
 
+        self.configure(background=BACKGROUND)
         self.copy_mode = copy_mode
         self.title(
             _("Satz kopieren") if copy_mode
@@ -31,7 +33,6 @@ class CreateSetWindow(tk.Toplevel):
         )
         self.geometry("500x300")
         self.transient(parent)
-        self.main_window = parent
 
         self.result = None
         self.config_data = config
@@ -171,10 +172,10 @@ class CreateSetWindow(tk.Toplevel):
 
         if not self.name_var.get():
 
-            messagebox.showerror(
+            show_themed_message(
+                self,
                 _("Fehler"),
-                _("Name fehlt"),
-                parent=self.main_window
+                _("Name fehlt")
             )
 
             return
@@ -192,10 +193,10 @@ class CreateSetWindow(tk.Toplevel):
                     self.save_set
                     and self.thumb_var.get() == self.save_set.thumbnail
             ):
-                messagebox.showerror(
+                show_themed_message(
+                    self,
                     _("Fehler"),
-                    _("Das ausgewählte Thumbnail wurde nicht gefunden."),
-                    parent=self.main_window
+                    _("Das ausgewählte Thumbnail wurde nicht gefunden.")
                 )
                 return
 

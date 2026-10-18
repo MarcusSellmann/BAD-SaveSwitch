@@ -4,10 +4,11 @@ import os
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
-from tkinter import messagebox
 
 from core.config_manager import ConfigManager
 from core.localization import _
+
+from gui.theme import BACKGROUND, show_themed_message
 
 
 class SettingsWindow(tk.Toplevel):
@@ -18,6 +19,7 @@ class SettingsWindow(tk.Toplevel):
 
         super().__init__(parent)
 
+        self.configure(background=BACKGROUND)
         self.title(_("Einstellungen"))
         self.geometry("700x420")
         self.transient(parent)
@@ -88,10 +90,10 @@ class SettingsWindow(tk.Toplevel):
         try:
             os.startfile(path)
         except OSError as error:
-            messagebox.showerror(
+            show_themed_message(
+                self,
                 _("Fehler"),
-                str(error),
-                parent=self
+                str(error)
             )
 
     @staticmethod

@@ -19,6 +19,15 @@ from core.localization import _, get_current_language, set_language
 from gui.settings_window import SettingsWindow
 from gui.create_set_window import CreateSetWindow
 
+from gui.theme import (
+    ACCENT,
+    BACKGROUND,
+    FOREGROUND,
+    MUTED_FOREGROUND,
+    apply_theme,
+    show_themed_message
+)
+
 APP_VERSION = "1.1_preview"
 
 
@@ -47,6 +56,7 @@ class MainWindow(tk.Tk):
 
         super().__init__()
         self.withdraw()
+        apply_theme(self)
         self.splash_duration = splash_duration
 
         self.title(
@@ -113,20 +123,16 @@ class MainWindow(tk.Tk):
     def show_startup_splash(self):
         """Display the branded startup screen while the main window loads."""
 
-        background = "#242830"
-        foreground = "#F4F6F8"
-        muted_foreground = "#A4ACB8"
-
         splash = tk.Toplevel(self)
         splash.withdraw()
         splash.overrideredirect(True)
-        splash.configure(background=background)
+        splash.configure(background=BACKGROUND)
         splash.resizable(False, False)
         splash.iconphoto(False, self.application_icon)
 
         tk.Frame(
             splash,
-            background="#31B7C7",
+            background=ACCENT,
             height=4
         ).pack(fill="x")
 
@@ -137,30 +143,30 @@ class MainWindow(tk.Tk):
         tk.Label(
             splash,
             image=self.splash_image,
-            background=background
+            background=BACKGROUND
         ).pack(pady=(43, 15))
 
         tk.Label(
             splash,
             text=_("BAD Save Switch"),
-            background=background,
-            foreground=foreground,
+            background=BACKGROUND,
+            foreground=FOREGROUND,
             font=("Segoe UI", 22, "bold")
         ).pack()
 
         tk.Label(
             splash,
             text=f"Version {APP_VERSION}",
-            background=background,
-            foreground=muted_foreground,
+            background=BACKGROUND,
+            foreground=MUTED_FOREGROUND,
             font=("Segoe UI", 10)
         ).pack(pady=(7, 0))
 
         tk.Label(
             splash,
             text=_("Lädt..."),
-            background=background,
-            foreground=muted_foreground,
+            background=BACKGROUND,
+            foreground=MUTED_FOREGROUND,
             font=("Segoe UI", 9)
         ).pack(pady=(18, 0))
 
@@ -179,8 +185,7 @@ class MainWindow(tk.Tk):
     def build(self):
         """Construct the list, controls, language selector, and bindings."""
 
-        style = ttk.Style(self)
-        style.configure(
+        ttk.Style(self).configure(
             "Treeview",
             rowheight=self.TREE_ROW_HEIGHT
         )
@@ -612,6 +617,15 @@ class MainWindow(tk.Tk):
         self.tree.focus(item)
 
         menu = tk.Menu(self, tearoff=False)
+        menu.configure(
+            background=BACKGROUND,
+            foreground=FOREGROUND,
+            activebackground=ACCENT,
+            activeforeground=BACKGROUND,
+            disabledforeground=MUTED_FOREGROUND,
+            borderwidth=1,
+            relief="solid"
+        )
         menu.add_command(
             label=_("Satz aktivieren"),
             command=self.activate
@@ -759,34 +773,7 @@ class MainWindow(tk.Tk):
     def show_message(self, title, message):
         """Show a modal message centered over the main window."""
 
-        popup = tk.Toplevel(self)
-        popup.title(title)
-        popup.transient(self)
-
-        ttk.Label(
-            popup,
-            text=message
-        ).pack(padx=30, pady=(20, 10))
-
-        ttk.Button(
-            popup,
-            text=_("OK"),
-            command=popup.destroy
-        ).pack(pady=(0, 20))
-
-        popup.update_idletasks()
-
-        x = self.winfo_rootx() + (
-            self.winfo_width() - popup.winfo_width()
-        ) // 2
-        y = self.winfo_rooty() + (
-            self.winfo_height() - popup.winfo_height()
-        ) // 2
-
-        popup.geometry(f"+{max(x, 0)}+{max(y, 0)}")
-        popup.grab_set()
-        popup.focus_force()
-        self.wait_window(popup)
+        show_themed_message(self, title, message)
 
     def delete(self):
         """Confirm and delete the selected save set."""
@@ -879,6 +866,7 @@ class MainWindow(tk.Tk):
         """Return the user's answer from a centered delete confirmation."""
 
         popup = tk.Toplevel(self)
+        popup.configure(background=BACKGROUND)
         popup.title(_("Löschen"))
         popup.transient(self)
 
@@ -924,6 +912,7 @@ class MainWindow(tk.Tk):
         """Confirm the deletion of .save files from all configured sources."""
 
         popup = tk.Toplevel(self)
+        popup.configure(background=BACKGROUND)
         popup.title(_("Saves löschen"))
         popup.transient(self)
 
