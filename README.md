@@ -20,7 +20,7 @@ BAD-SaveSwitch/
 `-- thumbnails/
 ```
 
-The first time you start the executable, it creates `config.json` beside itself. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
+The first time you start the executable, it creates `config.json` beside itself. It suggests the current user's Ren'Py AppData directories for Season 1/2 and Season 3, checking Steam, Patreon, then GOG folder suffixes and defaulting to Steam if none exists. Existing non-empty paths are preserved, and all suggested paths can be changed in Settings. Then enter the save, library, and thumbnail paths in Settings and save them to the configuration. `BAD-library` and `thumbnails` are suggested folder names only; you can choose different folders or locations in Settings.
 
 Install the dependency with:
 
