@@ -306,6 +306,14 @@ class MainWindow(tk.Tk):
             state="disabled"
         )
         self.action_buttons["update"].pack(side="left", padx=5)
+        
+        self.action_buttons["copy"] = ttk.Button(
+            buttons,
+            text=_("Satz kopieren"),
+            command=self.copy_selected_set,
+            state="disabled"
+        )
+        self.action_buttons["copy"].pack(side="left", padx=5)
 
         self.action_buttons["delete"] = ttk.Button(
             buttons,
@@ -337,14 +345,6 @@ class MainWindow(tk.Tk):
             command=self.new_empty_set
         )
         self.action_buttons["new_empty"].pack(side="left", padx=5)
-
-        self.action_buttons["copy"] = ttk.Button(
-            buttons,
-            text=_("Satz kopieren"),
-            command=self.copy_selected_set,
-            state="disabled"
-        )
-        self.action_buttons["copy"].pack(side="left", padx=5)
 
         self.action_buttons["settings"] = ttk.Button(
             buttons,
