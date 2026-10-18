@@ -1,8 +1,10 @@
 """Main application window and save-set interaction workflows."""
 
-import tkinter as tk
+import math
 import os
 import sys
+import time
+import tkinter as tk
 from datetime import datetime
 from typing import cast
 
@@ -17,6 +19,8 @@ from core.localization import _, get_current_language, set_language
 from gui.settings_window import SettingsWindow
 from gui.create_set_window import CreateSetWindow
 
+APP_VERSION = "1.1_preview"
+
 
 class MainWindow(tk.Tk):
     """Display the save-set library and expose its primary actions."""
@@ -26,15 +30,24 @@ class MainWindow(tk.Tk):
     TREE_ROW_HEIGHT = 72
     DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S"
     DATETIME_SAMPLE = "00.00.0000 00:00:00"
+    MAIN_WINDOW_SIZE = "1600x700"
+    SPLASH_SIZE = (520, 320)
     LANGUAGES = {
         "de": "🇩🇪 Deutsch",
         "en": "🇬🇧 English"
     }
 
-    def __init__(self):
-        """Initialize the main window, services, widgets, and initial rows."""
+    def __init__(self, splash_duration: float = 3.0):
+        """Initialize the app; keep the splash visible for at least duration seconds."""
+
+        if not math.isfinite(splash_duration) or splash_duration < 0:
+            raise ValueError(
+                "splash_duration must be a finite non-negative number"
+            )
 
         super().__init__()
+        self.withdraw()
+        self.splash_duration = splash_duration
 
         self.title(
             _("BAD Save Switch")
@@ -50,6 +63,7 @@ class MainWindow(tk.Tk):
             "assets",
             "BAD_Save_Switch.ico"
         )
+        self.icon_path = icon_path
         with Image.open(icon_path) as icon:
             icon.thumbnail((256, 256))
             self.application_icon = cast(
@@ -58,9 +72,7 @@ class MainWindow(tk.Tk):
             )
         self.iconphoto(True, self.application_icon)
 
-        self.geometry(
-            "1600x700"
-        )
+        self.geometry(self.MAIN_WINDOW_SIZE)
 
         self.config_data = ConfigManager.load()
         set_language(
@@ -69,6 +81,9 @@ class MainWindow(tk.Tk):
                 get_current_language()
             )
         )
+
+        splash = self.show_startup_splash()
+        splash_started_at = time.monotonic()
 
         self.manager = SaveManager(
             self.config_data
@@ -80,6 +95,86 @@ class MainWindow(tk.Tk):
         self.build()
 
         self.refresh()
+
+        remaining_duration = self.splash_duration - (
+            time.monotonic() - splash_started_at
+        )
+        if remaining_duration > 0:
+            splash.after(
+                round(remaining_duration * 1000),
+                splash.destroy
+            )
+            self.wait_window(splash)
+        else:
+            splash.destroy()
+
+        self.deiconify()
+
+    def show_startup_splash(self):
+        """Display the branded startup screen while the main window loads."""
+
+        background = "#242830"
+        foreground = "#F4F6F8"
+        muted_foreground = "#A4ACB8"
+
+        splash = tk.Toplevel(self)
+        splash.withdraw()
+        splash.overrideredirect(True)
+        splash.configure(background=background)
+        splash.resizable(False, False)
+        splash.iconphoto(False, self.application_icon)
+
+        tk.Frame(
+            splash,
+            background="#31B7C7",
+            height=4
+        ).pack(fill="x")
+
+        icon = Image.open(self.icon_path).convert("RGBA")
+        icon = icon.resize((88, 88), Image.Resampling.LANCZOS)
+        self.splash_image = ImageTk.PhotoImage(icon, master=splash)
+
+        tk.Label(
+            splash,
+            image=self.splash_image,
+            background=background
+        ).pack(pady=(43, 15))
+
+        tk.Label(
+            splash,
+            text=_("BAD Save Switch"),
+            background=background,
+            foreground=foreground,
+            font=("Segoe UI", 22, "bold")
+        ).pack()
+
+        tk.Label(
+            splash,
+            text=f"Version {APP_VERSION}",
+            background=background,
+            foreground=muted_foreground,
+            font=("Segoe UI", 10)
+        ).pack(pady=(7, 0))
+
+        tk.Label(
+            splash,
+            text=_("Lädt..."),
+            background=background,
+            foreground=muted_foreground,
+            font=("Segoe UI", 9)
+        ).pack(pady=(18, 0))
+
+        splash.update_idletasks()
+        splash_width, splash_height = self.SPLASH_SIZE
+        x = (splash.winfo_screenwidth() - splash_width) // 2
+        y = (splash.winfo_screenheight() - splash_height) // 2
+        splash.geometry(
+            f"{splash_width}x{splash_height}+{x}+{y}"
+        )
+        splash.deiconify()
+        splash.update()
+
+        return splash
 
     def build(self):
         """Construct the list, controls, language selector, and bindings."""
@@ -274,6 +369,10 @@ class MainWindow(tk.Tk):
         )
 
         language_dropdown.pack(side="right", padx=5)
+        ttk.Label(
+            buttons,
+            text=f"Version {APP_VERSION}"
+        ).pack(side="right", padx=5)
         language_dropdown.bind(
             "<<ComboboxSelected>>",
             self.change_language
@@ -532,12 +631,39 @@ class MainWindow(tk.Tk):
         )
         menu.add_separator()
         menu.add_command(
+            label=_("Ordner öffnen"),
+            command=lambda set_id=item: self.open_set_folder(set_id)
+        )
+        menu.add_separator()
+        menu.add_command(
             label=_("Löschen"),
             command=self.delete
         )
 
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def open_set_folder(self, set_id):
+        """Open the selected save set's folder in the system file manager."""
+
+        folder = os.path.join(
+            self.config_data.get("library_path", ""),
+            set_id
+        )
+        if not os.path.isdir(folder):
+            self.show_message(
+                _("Fehler"),
+                _("Der Ordner des Satzes wurde nicht gefunden.")
+            )
+            return
+
+        try:
+            os.startfile(folder)
+        except OSError as error:
+            self.show_message(
+                _("Fehler"),
+                f"{_('Der Ordner konnte nicht geöffnet werden.')}\n{error}"
+            )
 
     def edit_set(self, set_id):
         """Edit a save set's name, description, and thumbnail."""
