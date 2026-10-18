@@ -217,6 +217,47 @@ class SaveManager:
 
         return set_id
 
+    def copy_set(self, source_set_id, name, description, thumbnail):
+        """Duplicate a set's stored files and metadata as an inactive set."""
+
+        library = self.config["library_path"]
+        source_folder = os.path.join(library, source_set_id)
+        source_meta_file = os.path.join(source_folder, "meta.json")
+
+        if not os.path.isdir(source_folder) or not os.path.isfile(source_meta_file):
+            return False
+
+        with open(source_meta_file, "r", encoding="utf-8") as f:
+            metadata = json.load(f)
+
+        set_id = str(uuid.uuid4())
+        destination_folder = os.path.join(library, set_id)
+
+        try:
+            shutil.copytree(source_folder, destination_folder)
+            metadata.update({
+                "id": set_id,
+                "name": name,
+                "description": description,
+                "thumbnail": os.path.basename(thumbnail) if thumbnail else "",
+                "created": datetime.now().isoformat(),
+                "modified": None,
+                "active": False
+            })
+
+            with open(
+                    os.path.join(destination_folder, "meta.json"),
+                    "w",
+                    encoding="utf-8"
+            ) as f:
+                json.dump(metadata, f, indent=4)
+        except Exception:
+            if os.path.isdir(destination_folder):
+                shutil.rmtree(destination_folder)
+            raise
+
+        return set_id
+
     def activate_set(self, set_id):
         """Restore a set's save files and mark it as the active set."""
 

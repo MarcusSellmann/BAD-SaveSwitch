@@ -1,9 +1,12 @@
 """Main application window and save-set interaction workflows."""
 
-import tkinter as tk
+import math
 import os
 import sys
+import time
+import tkinter as tk
 from datetime import datetime
+from typing import cast
 
 from PIL import Image, ImageTk
 from tkinter import ttk
@@ -16,6 +19,17 @@ from core.localization import _, get_current_language, set_language
 from gui.settings_window import SettingsWindow
 from gui.create_set_window import CreateSetWindow
 
+from gui.theme import (
+    ACCENT,
+    BACKGROUND,
+    FOREGROUND,
+    MUTED_FOREGROUND,
+    apply_theme,
+    show_themed_message
+)
+
+APP_VERSION = "1.1"
+
 
 class MainWindow(tk.Tk):
     """Display the save-set library and expose its primary actions."""
@@ -25,15 +39,25 @@ class MainWindow(tk.Tk):
     TREE_ROW_HEIGHT = 72
     DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S"
     DATETIME_SAMPLE = "00.00.0000 00:00:00"
+    MAIN_WINDOW_SIZE = "1600x700"
+    SPLASH_SIZE = (520, 320)
     LANGUAGES = {
         "de": "🇩🇪 Deutsch",
         "en": "🇬🇧 English"
     }
 
-    def __init__(self):
-        """Initialize the main window, services, widgets, and initial rows."""
+    def __init__(self, splash_duration: float = 3.0):
+        """Initialize the app; keep the splash visible for at least duration seconds."""
+
+        if not math.isfinite(splash_duration) or splash_duration < 0:
+            raise ValueError(
+                "splash_duration must be a finite non-negative number"
+            )
 
         super().__init__()
+        self.withdraw()
+        apply_theme(self)
+        self.splash_duration = splash_duration
 
         self.title(
             _("BAD Save Switch")
@@ -44,17 +68,21 @@ class MainWindow(tk.Tk):
             "_MEIPASS",
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
-        self.iconbitmap(
-            os.path.join(
-                application_directory,
-                "assets",
-                "BAD_Save_Switch.ico"
+        icon_path = os.path.join(
+            application_directory,
+            "assets",
+            "BAD_Save_Switch.ico"
+        )
+        self.icon_path = icon_path
+        with Image.open(icon_path) as icon:
+            icon.thumbnail((256, 256))
+            self.application_icon = cast(
+                tk.PhotoImage,
+                ImageTk.PhotoImage(icon)
             )
-        )
+        self.iconphoto(True, self.application_icon)
 
-        self.geometry(
-            "1600x700"
-        )
+        self.geometry(self.MAIN_WINDOW_SIZE)
 
         self.config_data = ConfigManager.load()
         set_language(
@@ -63,6 +91,9 @@ class MainWindow(tk.Tk):
                 get_current_language()
             )
         )
+
+        splash = self.show_startup_splash()
+        splash_started_at = time.monotonic()
 
         self.manager = SaveManager(
             self.config_data
@@ -75,11 +106,86 @@ class MainWindow(tk.Tk):
 
         self.refresh()
 
+        remaining_duration = self.splash_duration - (
+            time.monotonic() - splash_started_at
+        )
+        if remaining_duration > 0:
+            splash.after(
+                round(remaining_duration * 1000),
+                splash.destroy
+            )
+            self.wait_window(splash)
+        else:
+            splash.destroy()
+
+        self.deiconify()
+
+    def show_startup_splash(self):
+        """Display the branded startup screen while the main window loads."""
+
+        splash = tk.Toplevel(self)
+        splash.withdraw()
+        splash.overrideredirect(True)
+        splash.configure(background=BACKGROUND)
+        splash.resizable(False, False)
+        splash.iconphoto(False, self.application_icon)
+
+        tk.Frame(
+            splash,
+            background=ACCENT,
+            height=4
+        ).pack(fill="x")
+
+        icon = Image.open(self.icon_path).convert("RGBA")
+        icon = icon.resize((88, 88), Image.Resampling.LANCZOS)
+        self.splash_image = ImageTk.PhotoImage(icon, master=splash)
+
+        tk.Label(
+            splash,
+            image=self.splash_image,
+            background=BACKGROUND
+        ).pack(pady=(43, 15))
+
+        tk.Label(
+            splash,
+            text=_("BAD Save Switch"),
+            background=BACKGROUND,
+            foreground=FOREGROUND,
+            font=("Segoe UI", 22, "bold")
+        ).pack()
+
+        tk.Label(
+            splash,
+            text=f"Version {APP_VERSION}",
+            background=BACKGROUND,
+            foreground=MUTED_FOREGROUND,
+            font=("Segoe UI", 10)
+        ).pack(pady=(7, 0))
+
+        tk.Label(
+            splash,
+            text=_("Lädt..."),
+            background=BACKGROUND,
+            foreground=MUTED_FOREGROUND,
+            font=("Segoe UI", 9)
+        ).pack(pady=(18, 0))
+
+        splash.update_idletasks()
+        splash_width, splash_height = self.SPLASH_SIZE
+        x = (splash.winfo_screenwidth() - splash_width) // 2
+        y = (splash.winfo_screenheight() - splash_height) // 2
+        splash.geometry(
+            f"{splash_width}x{splash_height}+{x}+{y}"
+        )
+        splash.deiconify()
+        splash.update()
+
+        return splash
+
     def build(self):
         """Construct the list, controls, language selector, and bindings."""
 
-        style = ttk.Style(self)
-        style.configure(
+        ttk.Style(self).configure(
             "Treeview",
             rowheight=self.TREE_ROW_HEIGHT
         )
@@ -205,6 +311,14 @@ class MainWindow(tk.Tk):
             state="disabled"
         )
         self.action_buttons["update"].pack(side="left", padx=5)
+        
+        self.action_buttons["copy"] = ttk.Button(
+            buttons,
+            text=_("Satz kopieren"),
+            command=self.copy_selected_set,
+            state="disabled"
+        )
+        self.action_buttons["copy"].pack(side="left", padx=5)
 
         self.action_buttons["delete"] = ttk.Button(
             buttons,
@@ -260,6 +374,10 @@ class MainWindow(tk.Tk):
         )
 
         language_dropdown.pack(side="right", padx=5)
+        ttk.Label(
+            buttons,
+            text=f"Version {APP_VERSION}"
+        ).pack(side="right", padx=5)
         language_dropdown.bind(
             "<<ComboboxSelected>>",
             self.change_language
@@ -302,7 +420,7 @@ class MainWindow(tk.Tk):
         self.update_sync_action_state()
 
     def update_sync_action_state(self, event=None):
-        """Enable synchronization only when the selected set is active."""
+        """Update action availability based on the selected save set."""
 
         selected = self.tree.selection()
         is_active = bool(
@@ -311,6 +429,9 @@ class MainWindow(tk.Tk):
         )
         self.action_buttons["update"].state(
             ["!disabled"] if is_active else ["disabled"]
+        )
+        self.action_buttons["copy"].state(
+            ["!disabled"] if selected else ["disabled"]
         )
 
     def load_thumbnail(self, thumbnail_name):
@@ -429,6 +550,50 @@ class MainWindow(tk.Tk):
 
         self.refresh()
 
+    def copy_selected_set(self, set_id=None):
+        """Duplicate the selected set and its saved files after confirmation."""
+
+        if not self.ensure_library_configured():
+            return
+
+        selected = self.tree.selection()
+        set_id = set_id or (selected[0] if selected else None)
+        if not set_id:
+            return
+
+        save_set = next(
+            (
+                save_set
+                for save_set in self.manager.get_all_sets()
+                if save_set.id == set_id
+            ),
+            None
+        )
+
+        if not save_set:
+            return
+
+        win = CreateSetWindow(
+            self,
+            self.config_data,
+            show_keep_option=False,
+            save_set=save_set,
+            copy_mode=True
+        )
+
+        self.wait_window(win)
+
+        if not win.result:
+            return
+
+        self.manager.copy_set(
+            save_set.id,
+            win.result["name"],
+            win.result["description"],
+            win.result["thumbnail"]
+        )
+        self.refresh()
+
     def double_click_activate(self, event):
         """Activate the row under a double-click."""
 
@@ -452,6 +617,15 @@ class MainWindow(tk.Tk):
         self.tree.focus(item)
 
         menu = tk.Menu(self, tearoff=False)
+        menu.configure(
+            background=BACKGROUND,
+            foreground=FOREGROUND,
+            activebackground=ACCENT,
+            activeforeground=BACKGROUND,
+            disabledforeground=MUTED_FOREGROUND,
+            borderwidth=1,
+            relief="solid"
+        )
         menu.add_command(
             label=_("Satz aktivieren"),
             command=self.activate
@@ -465,6 +639,15 @@ class MainWindow(tk.Tk):
             label=_("Satz bearbeiten"),
             command=lambda set_id=item: self.edit_set(set_id)
         )
+        menu.add_command(
+            label=_("Satz kopieren"),
+            command=lambda set_id=item: self.copy_selected_set(set_id)
+        )
+        menu.add_separator()
+        menu.add_command(
+            label=_("Ordner öffnen"),
+            command=lambda set_id=item: self.open_set_folder(set_id)
+        )
         menu.add_separator()
         menu.add_command(
             label=_("Löschen"),
@@ -473,6 +656,28 @@ class MainWindow(tk.Tk):
 
         menu.tk_popup(event.x_root, event.y_root)
         menu.grab_release()
+
+    def open_set_folder(self, set_id):
+        """Open the selected save set's folder in the system file manager."""
+
+        folder = os.path.join(
+            self.config_data.get("library_path", ""),
+            set_id
+        )
+        if not os.path.isdir(folder):
+            self.show_message(
+                _("Fehler"),
+                _("Der Ordner des Satzes wurde nicht gefunden.")
+            )
+            return
+
+        try:
+            os.startfile(folder)
+        except OSError as error:
+            self.show_message(
+                _("Fehler"),
+                f"{_('Der Ordner konnte nicht geöffnet werden.')}\n{error}"
+            )
 
     def edit_set(self, set_id):
         """Edit a save set's name, description, and thumbnail."""
@@ -568,34 +773,7 @@ class MainWindow(tk.Tk):
     def show_message(self, title, message):
         """Show a modal message centered over the main window."""
 
-        popup = tk.Toplevel(self)
-        popup.title(title)
-        popup.transient(self)
-
-        ttk.Label(
-            popup,
-            text=message
-        ).pack(padx=30, pady=(20, 10))
-
-        ttk.Button(
-            popup,
-            text=_("OK"),
-            command=popup.destroy
-        ).pack(pady=(0, 20))
-
-        popup.update_idletasks()
-
-        x = self.winfo_rootx() + (
-            self.winfo_width() - popup.winfo_width()
-        ) // 2
-        y = self.winfo_rooty() + (
-            self.winfo_height() - popup.winfo_height()
-        ) // 2
-
-        popup.geometry(f"+{max(x, 0)}+{max(y, 0)}")
-        popup.grab_set()
-        popup.focus_force()
-        self.wait_window(popup)
+        show_themed_message(self, title, message)
 
     def delete(self):
         """Confirm and delete the selected save set."""
@@ -688,6 +866,7 @@ class MainWindow(tk.Tk):
         """Return the user's answer from a centered delete confirmation."""
 
         popup = tk.Toplevel(self)
+        popup.configure(background=BACKGROUND)
         popup.title(_("Löschen"))
         popup.transient(self)
 
@@ -733,6 +912,7 @@ class MainWindow(tk.Tk):
         """Confirm the deletion of .save files from all configured sources."""
 
         popup = tk.Toplevel(self)
+        popup.configure(background=BACKGROUND)
         popup.title(_("Saves löschen"))
         popup.transient(self)
 
@@ -830,6 +1010,7 @@ class MainWindow(tk.Tk):
             "delete": _("Löschen"),
             "clear_sources": _("Saves löschen"),
             "new_empty": _("Leerer Satz"),
+            "copy": _("Satz kopieren"),
             "settings": _("Einstellungen")
         }
 

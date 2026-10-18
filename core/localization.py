@@ -11,6 +11,7 @@ _current_language = "en"
 BUILTIN_TRANSLATIONS = {
     "en": {
         "BAD Save Switch": "BAD Save Switch",
+        "Lädt...": "Loading...",
         "Thumbnail": "Thumbnail",
         "ID": "ID",
         "Name": "Name",
@@ -22,9 +23,14 @@ BUILTIN_TRANSLATIONS = {
         "Nein": "No",
         "Aus Spielstand erstellen": "Create from savegame",
         "Leerer Satz": "Empty Set",
+        "Satz kopieren": "Copy set",
+        "Kopie erstellen": "Create copy",
         "Satz aktivieren": "Activate set",
         "Satz synchronisieren": "Synchronize set",
         "Satz bearbeiten": "Edit set",
+        "Ordner öffnen": "Open folder",
+        "Der Ordner des Satzes wurde nicht gefunden.": "The save-set folder could not be found.",
+        "Der Ordner konnte nicht geöffnet werden.": "The folder could not be opened.",
         "Löschen": "Delete",
         "Saves löschen": "Delete source saves",
         "Einstellungen": "Settings",
@@ -56,6 +62,7 @@ BUILTIN_TRANSLATIONS = {
         "Season3 AppData-Verzeichnis": "Season3 AppData directory",
         "Bibliothek": "Library",
         "Thumbnails": "Thumbnails",
+        "Öffnen": "Open",
         "Speichern": "Save"
     }
 }
